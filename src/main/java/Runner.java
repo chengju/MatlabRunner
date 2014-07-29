@@ -131,7 +131,7 @@ public final class Runner {
             // read and return ...........................................................
             JackScenario S = null; //new Scenario();
             try {
-                setObjectFactory(u, new JackObjectSomething());
+                setObjectFactory(u, new JackObjectSomething(args[0]));
                 S = (JackScenario) u.unmarshal( new FileInputStream(configfilename) );
             } catch( JAXBException je ) {
                 throw new BeatsException("JAXB threw an exception when loading the configuration file", je);
