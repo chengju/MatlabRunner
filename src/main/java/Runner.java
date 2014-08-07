@@ -54,12 +54,13 @@ public final class Runner {
 
             // simulate
 			if (cmd.equals("-s")){
+                System.out.println("running inside");
 				run_simulation(arguments);
 			} else
                 throw new InvalidUsageException(cmd);
 
 		} catch (InvalidUsageException exc) {
-            System.err.print("hi");
+            System.err.print("busted");
 		} catch (Exception exc) {
 			exc.printStackTrace();
 		}

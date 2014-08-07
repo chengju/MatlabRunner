@@ -20,7 +20,7 @@ class JackScenario(propsFn: String) extends Scenario {
   props.load(fr)
   fr.close()
   val matlabRoot = props.getProperty("matlabRoot", "/Users/jdr/L0-boundary-flows")
-  val beatsRoot = props.getProperty("beatsRoot", "/Users/jdr/github/beats/target")
+  val beatsRoot = props.getProperty("beatsRoot", "/Users/jdr/runner/beats")
   val options = new MatlabProxyFactoryOptions.Builder()
   val hidden = false
   options.setHidden(hidden)
@@ -28,7 +28,8 @@ class JackScenario(propsFn: String) extends Scenario {
   val factory = new MatlabProxyFactory(options.build())
   val proxy = factory.getProxy
   var sensor_ids: Array[Array[Double]] = null
-  var link_ids: Array[Array[Double]] = null
+  var sensor_link_ids: Array[Array[Double]] = null
+  var demand_link_ids: Array[Array[Double]] = null
   var demandLinks: Seq[Link] = null
   var allLinks: Seq[Link] = null
   var allLinkIds: Array[Array[Double]] = null
@@ -43,14 +44,15 @@ class JackScenario(propsFn: String) extends Scenario {
   override def populate() {
     super.populate()
     sensor_ids = Array(sensorSet.getSensor.toList.map{_.getSensorIdOriginal.toDouble}.toArray)
-    link_ids = Array(sensorSet.getSensor.toList.map{_.getLinkId.toDouble}.toArray)
+    demand_link_ids = Array(demandSet.getDemandProfile.map{_.getLinkIdOrg.toDouble}.toArray)
+    sensor_link_ids = Array(sensorSet.getSensor.toList.map{_.getLinkId.toDouble}.toArray)
     val net = getNetworkSet.getNetwork.head.asInstanceOf[Network]
     allLinks = net.getListOfLinks.map{_.asInstanceOf[Link]}
     allLinkIds = Array(allLinks.map{_.getId.toDouble}.toArray)
-    demandLinks = link_ids.head.map{lid => net.getLinkWithId(lid.toLong)}
+    demandLinks = demand_link_ids.head.map{lid => net.getLinkWithId(lid.toLong)}
     saveArray(sensor_ids, "sensor_ids")
     saveArray(allLinkIds, "link_ids")
-    saveArray(link_ids, "link_ids_demand")
+    saveArray(demand_link_ids, "link_ids_demand")
     proxy eval "setupBoundaryFlows;"
     //proxy eval "train_data_set;"
     proxy.eval("setup_est('%s', '%s')".format(propsFn, beatsRoot))
@@ -63,7 +65,7 @@ class JackScenario(propsFn: String) extends Scenario {
     val previous_time = time_current - n_steps * sample_dt
 
     // TODO(jackdreilly): This is obviously a stub
-    val previous_demand_points = sensorSet.getSensor.map{sensor => {
+    val previous_demand_points = demand_link_ids.head.map{lid => {
       Array.fill(n_steps)(1.0)
     }}.toArray
 
@@ -109,8 +111,9 @@ class JackScenario(propsFn: String) extends Scenario {
     val currentTime = Array(Array(2001,1,10,0,0,time_current))
     saveArray(previous_points, "previous_points")
     saveArray(currentTime, "time_current")
-    proxy.eval("update_detectors(%s, %s, %s, %d)".format("sensor_ids", "time_current", "previous_points", sample_dt.toInt))
-    getCommandResult("demand_for_beats(%s, %d, %d, %s)".format("sensor_ids", horizon_steps, sample_dt.toInt, "time_current"))
+    val stringForSensors = "link_ids_demand"
+    proxy.eval("update_detectors(%s, %s, %s, %d)".format(stringForSensors, "time_current", "previous_points", sample_dt.toInt))
+    getCommandResult("demand_for_beats(%s, %d, %d, %s)".format(stringForSensors, horizon_steps, sample_dt.toInt, "time_current"))
   }
 
   override def predict_demands(time_current: Double, sample_dt: Double, horizon_steps: Int): DemandSet = {
