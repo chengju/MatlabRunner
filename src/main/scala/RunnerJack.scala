@@ -43,7 +43,7 @@ class JackScenario(propsFn: String) extends Scenario {
 
   override def populate() {
     super.populate()
-    sensor_ids = Array(sensorSet.getSensor.toList.map{_.getSensorIdOriginal.toDouble}.toArray)
+    sensor_ids = Array(sensorSet.getSensor.toList.map{_.getId.toDouble}.toArray)
     demand_link_ids = Array(demandSet.getDemandProfile.map{_.getLinkIdOrg.toDouble}.toArray)
     sensor_link_ids = Array(sensorSet.getSensor.toList.map{_.getLinkId.toDouble}.toArray)
     val net = getNetworkSet.getNetwork.head.asInstanceOf[Network]
@@ -60,6 +60,7 @@ class JackScenario(propsFn: String) extends Scenario {
 
   def matlabDensities = {
     val time_current = _current_time
+    println(time_current)
     val sample_dt = _sample_dt
     val n_steps = math.max(1,math.min(time_current / sample_dt, 10)).toInt
     val previous_time = time_current - n_steps * sample_dt
@@ -76,8 +77,10 @@ class JackScenario(propsFn: String) extends Scenario {
     saveArray(previous_points, "previous_points")
     saveArray(previous_demand_points, "previous_demand_points")
     saveArray(currentTime, "time_current")
-    proxy.eval("update_sensor_estimation(%s, %d, %s, %d)".format("sensor_ids", time_current.toInt, "previous_points", sample_dt.toInt))
-    proxy.eval("update_demand_estimation(%s, %d, %s, %d)".format("link_ids_demand", time_current.toInt, "previous_demand_points", sample_dt.toInt))
+    if (time_current > 0) {
+      proxy.eval("update_demand_estimation(%s, %d, %s, %d)".format("link_ids_demand", previous_time.toInt, "previous_demand_points", sample_dt.toInt))
+      proxy.eval("update_sensor_estimation(%s, %d, %s, %d)".format("sensor_ids", previous_time.toInt, "previous_points", sample_dt.toInt))
+    }
     getCommandResult("give_estimate(%s, %d)".format("link_ids", time_current.toInt))
   }
 
