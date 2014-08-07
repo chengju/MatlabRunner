@@ -20,6 +20,7 @@ class JackScenario(propsFn: String) extends Scenario {
   props.load(fr)
   fr.close()
   val matlabRoot = props.getProperty("matlabRoot", "/Users/jdr/L0-boundary-flows")
+  val beatsRoot = props.getProperty("beatsRoot", "/Users/jdr/github/beats/target")
   val options = new MatlabProxyFactoryOptions.Builder()
   val hidden = false
   options.setHidden(hidden)
@@ -51,8 +52,8 @@ class JackScenario(propsFn: String) extends Scenario {
     saveArray(allLinkIds, "link_ids")
     saveArray(link_ids, "link_ids_demand")
     proxy eval "setupBoundaryFlows;"
-    proxy eval "train_data_set;"
-    proxy.eval("setup_est(%s, beats directory)".format(matlabRoot))
+    //proxy eval "train_data_set;"
+    proxy.eval("setup_est('%s', '%s')".format(propsFn, beatsRoot))
   }
 
   def matlabDensities = {
@@ -72,7 +73,7 @@ class JackScenario(propsFn: String) extends Scenario {
     val currentTime = Array(Array(2001,1,10,0,0,time_current))
     saveArray(previous_points, "previous_points")
     saveArray(previous_demand_points, "previous_demand_points")
-    saveArray(currentTime, "current_time")
+    saveArray(currentTime, "time_current")
     proxy.eval("update_sensor_estimation(%s, %d, %s, %d)".format("sensor_ids", time_current.toInt, "previous_points", sample_dt.toInt))
     proxy.eval("update_demand_estimation(%s, %d, %s, %d)".format("link_ids_demand", time_current.toInt, "previous_demand_points", sample_dt.toInt))
     getCommandResult("give_estimate(%s, %d)".format("link_ids", time_current.toInt))
@@ -107,8 +108,8 @@ class JackScenario(propsFn: String) extends Scenario {
     }}.toArray
     val currentTime = Array(Array(2001,1,10,0,0,time_current))
     saveArray(previous_points, "previous_points")
-    saveArray(currentTime, "current_time")
-    proxy.eval("update_detectors(%s, %s, %s, %d)".format("sensor_ids", "current_time", "previous_points", sample_dt.toInt))
+    saveArray(currentTime, "time_current")
+    proxy.eval("update_detectors(%s, %s, %s, %d)".format("sensor_ids", "time_current", "previous_points", sample_dt.toInt))
     getCommandResult("demand_for_beats(%s, %d, %d, %s)".format("sensor_ids", horizon_steps, sample_dt.toInt, "time_current"))
   }
 
