@@ -123,7 +123,7 @@ class JackScenario(propsFn: String) extends Scenario {
   }
 
   override def predict_demands(time_current: Double, sample_dt: Double, horizon_steps: Int): DemandSet = {
-    println("begin")
+    println("beginning")
     println("time current: " + time_current)
     println("sample dt: " + sample_dt)
     println("horizon steps: " + horizon_steps)
