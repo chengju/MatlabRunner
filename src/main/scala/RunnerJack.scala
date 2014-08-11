@@ -36,6 +36,7 @@ class JackScenario(propsFn: String) extends Scenario {
   var processor: MatlabTypeConverter = new MatlabTypeConverter(proxy)
   var _sample_dt: Double = -1
   var _current_time: Double = -1
+  var prev_time: Double = 0
 
   def saveArray(array: Array[Array[Double]], name: String) {
     processor.setNumericArray(name, new MatlabNumericArray(array, null))
@@ -60,10 +61,12 @@ class JackScenario(propsFn: String) extends Scenario {
 
   def matlabDensities = {
     val time_current = _current_time
-    println(time_current)
+
     val sample_dt = _sample_dt
-    val n_steps = math.max(1,math.min(time_current / sample_dt, 10)).toInt
+    val n_steps = math.max(1,math.min((time_current - prev_time) / sample_dt, 1000)).toInt
     val previous_time = time_current - n_steps * sample_dt
+    println("current: " + time_current.toInt)
+    println("previuos" + previous_time.toInt)
 
     // TODO(jackdreilly): This is obviously a stub
     val previous_demand_points = demand_link_ids.head.map{lid => {
@@ -107,7 +110,7 @@ class JackScenario(propsFn: String) extends Scenario {
 
   def getMatlabDemands(time_current: Double, sample_dt: Double, horizon_steps: Int) = {
     val previous_points = demandLinks.map{link => {
-      val n_steps = math.max(1,math.min(time_current / sample_dt, 10)).toInt
+      val n_steps = math.max(1,math.min((time_current - prev_time) / sample_dt, 1000)).toInt
       val previous_time = time_current - n_steps * sample_dt
       link.getDemandProfile.predict_in_VPS(0, previous_time,sample_dt, n_steps)
     }}.toArray
@@ -120,8 +123,13 @@ class JackScenario(propsFn: String) extends Scenario {
   }
 
   override def predict_demands(time_current: Double, sample_dt: Double, horizon_steps: Int): DemandSet = {
+    println("begin")
+    println("time current: " + time_current)
+    println("sample dt: " + sample_dt)
+    println("horizon steps: " + horizon_steps)
     // huge hack, and potentially incorrect!
     _sample_dt = sample_dt
+    prev_time = _current_time
     _current_time = time_current
     val demands = getMatlabDemands(time_current, sample_dt, horizon_steps)
     val factory = new JaxbObjectFactory()
@@ -140,12 +148,5 @@ class JackScenario(propsFn: String) extends Scenario {
       }}
     }}
     demand_set
-  }
-
-  override def finalize(): Unit = {
-    println("finalizing")
-    proxy.exit()
-    proxy.disconnect()
-    super.finalize()
   }
 }
