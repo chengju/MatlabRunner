@@ -1,7 +1,0 @@
-SCENARIO = /Users/jdr/L0-estimation/scenarios/demo.xml
-SIM_DT = 5
-#OUTPUT_PREFIX = /tmp/
-#OUTPUT_FORMAT = text
-#START_TIME = 0
-#DURATION = 1000
-#OUTPUT_DT = 1
