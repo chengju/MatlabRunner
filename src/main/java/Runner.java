@@ -54,7 +54,6 @@ public final class Runner {
 
             // simulate
 			if (cmd.equals("-s")){
-                System.out.println("running inside");
 				run_simulation(arguments);
 			} else
                 throw new InvalidUsageException(cmd);
