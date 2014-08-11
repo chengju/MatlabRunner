@@ -149,11 +149,4 @@ class JackScenario(propsFn: String) extends Scenario {
     }}
     demand_set
   }
-
-  override def finalize(): Unit = {
-    println("finalizing")
-    proxy.exit()
-    proxy.disconnect()
-    super.finalize()
-  }
 }
